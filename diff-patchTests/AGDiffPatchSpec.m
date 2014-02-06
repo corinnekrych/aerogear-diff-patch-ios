@@ -75,7 +75,16 @@ describe(@"AGDiffPatch", ^{
             } mutableCopy];
             NSDictionary *diff = [diffPatch diffFrom:contact1 to:contact3];
             [diff shouldNotBeNil];
-            //[[diff should] equal:@{@"name":@[@"corinne", @"filipo"]}];
+            [[diff should] equal:@{@"birthdate":@[@"120219XX", @0, @0], @"isFriendly":@[@"true", @0, @0]}];
+        });
+
+        it(@"should return added fields ", ^{
+            NSDictionary *contact3 = [@{@"id": @"1",
+                    @"name":@"corinne", @"birthdate":@"zzzzzz", @"isFriendly":@"true", @"hobby":@"skiing"
+            } mutableCopy];
+            NSDictionary *diff = [diffPatch diffFrom:contact1 to:contact3];
+            [diff shouldNotBeNil];
+            [[diff should] equal:@{@"birthdate":@[@"120219XX",@"zzzzzz"], @"hobby":@[@"skiing"]}];
         });
    });
 });

@@ -45,12 +45,12 @@
     NSArray *arrayDiff;
     if ([fromObject isEqualToString:toObject]) {
         return [NSNull null];
-    } else if((fromObject == nil || [fromObject isKindOfClass:[NSNull class]]) && ![toObject isKindOfClass:[NSNull class]]) {
-        arrayDiff = @[toObject];
-    } if(![fromObject isKindOfClass:[NSNull class]] && (toObject == nil || [toObject isKindOfClass:[NSNull class]])) {
-        arrayDiff = @[fromObject, @0, @0];
+    } else if((fromObject == nil) && toObject != nil) {
+        return arrayDiff = @[toObject];
+    } if(fromObject != nil && toObject == nil) {
+        return arrayDiff = @[fromObject, @0, @0];
     } else if(![fromObject isEqualToString:toObject]) {
-        arrayDiff = @[fromObject, toObject];
+        return arrayDiff = @[fromObject, toObject];
     }
     return arrayDiff;
 }
@@ -75,12 +75,9 @@
     return dictionaryDiff;
 }
 -(BOOL)isFrom:(NSObject*)from andTo:(NSObject*)to nullOrOfType:(Class)clazz {
-//    NSLog(@"1--> %@",[from isKindOfClass:clazz] && [to isKindOfClass:clazz]);
-//    NSLog(@"2--> %@", ([from isKindOfClass:clazz] && (to == nil || [to isEqual:[NSNull null]])));
-//    NSLog(@"3--> %@", (from == nil || [from isEqual:[NSNull null]] && [to isKindOfClass:clazz]));
     if( ([from isKindOfClass:clazz] && [to isKindOfClass:clazz])
-            || ([from isKindOfClass:clazz] && (to == nil || [to isEqual:[NSNull null]]) )
-            || (from == nil || ([from isEqual:[NSNull null]] && [to isKindOfClass:clazz]))) {
+            || ([from isKindOfClass:clazz] && (to == nil || to == [NSNull null]) )
+            || ((from == nil || from == [NSNull null]) && [to isKindOfClass:clazz]) ) {
         return YES;
     }
     return NO;
@@ -93,10 +90,10 @@
     if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSDictionary class]]) {
         return [self diffDictionaryFrom:fromObject to:toObject];
     }
-    if ([fromObject isKindOfClass:[NSArray class]] && [toObject isKindOfClass:[NSArray class]]) {
+    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSArray class]]) {
         return [self diffArrayFrom:fromObject to:toObject];
     }
-    if ([fromObject isKindOfClass:[NSString class]] && [toObject isKindOfClass:[NSString class]]) {
+    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSString class]]) {
         return [self diffStringFrom:fromObject to:toObject];
     }
     return [NSNull null];
