@@ -36,9 +36,74 @@
     return self;
 }
 
+-(BOOL)areTheSameFromObject:(NSArray*)fromObject toArray:(NSArray*)toObject fromIndex:(NSUInteger)fromIndex toIndex:(NSUInteger)toIndex {
+    if(fromObject == toObject) {
+        return YES;
+    }
+    NSString* fromString;
+    NSString* toString;
+    if ([fromObject[fromIndex] isKindOfClass:[NSString class]]) {
+        fromString = fromObject[fromIndex];
+    } else {
+        NSData* fromData = [NSJSONSerialization dataWithJSONObject:fromObject[fromIndex] options:NSJSONWritingPrettyPrinted error:nil];
+        fromString =[[NSString alloc] initWithData:fromData encoding:NSUTF8StringEncoding];
+    }
+    if ([toObject[toIndex] isKindOfClass:[NSString class]]) {
+        toString = toObject[toIndex];
+    } else {
+        NSData* toData = [NSJSONSerialization dataWithJSONObject:toObject[toIndex] options:NSJSONWritingPrettyPrinted error:nil];
+        toString =[[NSString alloc] initWithData:toData encoding:NSUTF8StringEncoding];
+    }
+    if([fromString isEqualToString:toString]) {
+        return YES;
+    }
+    return NO;
+    
+}
+
 -(id)diffArrayFrom:(NSArray *)fromObject to:(NSArray *)toObject {
-    //TODO
-    return nil;
+    NSUInteger commonHead = 0;
+    NSUInteger commonTail = 0;
+    NSUInteger fromLength = [fromObject count];
+    NSUInteger toLength = [toObject count];
+    NSMutableDictionary* diff;
+    
+    while (commonHead < fromLength
+           && commonHead < toLength
+           && [self areTheSameFromObject:fromObject toArray:toObject fromIndex:commonHead toIndex:commonHead]) {
+        commonHead++;
+    }
+    while (commonTail + commonHead < fromLength
+           && commonTail + commonHead < toLength
+           && [self areTheSameFromObject:fromObject toArray:toObject fromIndex:(fromLength - 1 - commonTail) toIndex:(toLength -1 - commonTail)]) {
+        commonTail++;
+    }
+    if (commonHead + commonTail == fromLength) {
+        if(fromLength == toLength) {
+            // arrays are identical
+            return [NSNull null];
+        }
+        // trivial case, a block (1 or more) was added to toArray
+        if(!diff) {
+            diff = [@{@"_t":@"a"} mutableCopy];
+         }
+        for (NSUInteger index = commonHead; index < toLength - commonTail; index++) {
+            NSString* indexString = [NSString stringWithFormat:@"%lu", (unsigned long)index];
+            diff[indexString] = @[toObject[index]];
+        }
+        return diff;
+    } else if (commonHead + commonTail == toLength) {
+        // trivial case, a block (1 or more) was remove from fromArray
+        if(!diff) {
+            diff = [@{@"_t":@"a"} mutableCopy];
+        }
+        for (NSUInteger index = commonHead; index < fromLength - commonTail; index++) {
+            NSString* indexString = [NSString stringWithFormat:@"_%lu", (unsigned long)index];
+            diff[indexString] = @[fromObject[index], @0, @0];
+        }
+        return diff;
+    }
+    return diff;
 }
 
 -(id)diffStringFrom:(NSString *)fromObject to:(NSString *)toObject {
@@ -74,6 +139,7 @@
     }
     return dictionaryDiff;
 }
+
 -(BOOL)isFrom:(NSObject*)from andTo:(NSObject*)to nullOrOfType:(Class)clazz {
     if( ([from isKindOfClass:clazz] && [to isKindOfClass:clazz])
             || ([from isKindOfClass:clazz] && (to == nil || to == [NSNull null]) )
