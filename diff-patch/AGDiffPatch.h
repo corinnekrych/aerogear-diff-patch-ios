@@ -18,6 +18,6 @@
 #import <Foundation/Foundation.h>
 
 @interface AGDiffPatch : NSObject
--(id)diffFrom:(NSObject *)fromObject to:(NSObject *)toObject;
+-(id)diffFrom:(id<NSFastEnumeration, NSObject>)fromObject to:(id<NSFastEnumeration, NSObject>)toObject;
 -(void)patchObject:(NSDictionary*)object withPatch:(NSObject*)patch error:(NSError**)error;
 @end

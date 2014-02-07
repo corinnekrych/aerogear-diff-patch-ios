@@ -122,7 +122,7 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
     return arrayDiff;
 }
 
--(id)diffDictionaryFrom:(NSDictionary *)fromObject to:(NSDictionary *)toObject {
+-(id)diffDictionaryFrom:(NSDictionary*)fromObject to:(NSDictionary*)toObject {
     NSMutableDictionary *dictionaryDiff = [[NSMutableDictionary alloc] init];
     for (NSString* key in fromObject) {
         NSDictionary* diff = [self diffFrom:fromObject[key] to:toObject[key]];
@@ -142,27 +142,27 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
     return dictionaryDiff;
 }
 
--(BOOL)isFrom:(NSObject*)from andTo:(NSObject*)to nullOrOfType:(Class)clazz {
+-(BOOL)isFrom:(id<NSFastEnumeration, NSObject>)from andTo:(id<NSFastEnumeration, NSObject>)to nullOrOfType:(Class)clazz {
     if( ([from isKindOfClass:clazz] && [to isKindOfClass:clazz])
-            || ([from isKindOfClass:clazz] && (to == nil || to == [NSNull null]) )
-            || ((from == nil || from == [NSNull null]) && [to isKindOfClass:clazz]) ) {
+            || ([from isKindOfClass:clazz] && (to == nil || [to isEqual:[NSNull null]]) )
+            || ((from == nil || [from isEqual:[NSNull null]]) && [to isKindOfClass:clazz]) ) {
         return YES;
     }
     return NO;
 }
 
--(id)diffFrom:(NSObject*)fromObject to:(NSObject*)toObject {
+-(id)diffFrom:(id<NSFastEnumeration, NSObject>)fromObject to:(id<NSFastEnumeration, NSObject>)toObject {
     if(fromObject == toObject) {
         return [NSNull null];
     }
     if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSDictionary class]]) {
-        return [self diffDictionaryFrom:fromObject to:toObject];
+        return [self diffDictionaryFrom:(NSDictionary*)fromObject to:(NSDictionary*)toObject];
     }
     if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSArray class]]) {
-        return [self diffArrayFrom:fromObject to:toObject];
+        return [self diffArrayFrom:(NSArray*)fromObject to:(NSArray*)toObject];
     }
     if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSString class]]) {
-        return [self diffStringFrom:fromObject to:toObject];
+        return [self diffStringFrom:(NSString*)fromObject to:(NSString*)toObject];
     }
     return [NSNull null];
 }
