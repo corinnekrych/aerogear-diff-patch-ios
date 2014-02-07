@@ -18,6 +18,8 @@
 #import "AGDiffPatch.h"
 #import "AGDiffConfig.h"
 
+NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
+
 @implementation AGDiffPatch {
     HashFunction _hashFunction;
 }
@@ -149,7 +151,7 @@
     return NO;
 }
 
--(id)diffFrom:(NSObject *)fromObject to:(NSObject *)toObject {
+-(id)diffFrom:(NSObject*)fromObject to:(NSObject*)toObject {
     if(fromObject == toObject) {
         return [NSNull null];
     }
@@ -163,6 +165,58 @@
         return [self diffStringFrom:fromObject to:toObject];
     }
     return [NSNull null];
+}
+
+-(id)patchObject:(NSDictionary*)object withPatch:(NSObject*)patch error:(NSError**)error {
+    return [self patchObject:object forProperty:nil patch:patch error:error];
+}
+
+-(NSDictionary*)applyPatch:(NSArray*)patch forProperty:(NSString*)property toObject:(NSDictionary*)object {
+    NSMutableDictionary* newObject = [object mutableCopy];
+    if ([patch count] < 3) {
+        NSString* newValue = patch[[patch count] - 1];
+        newObject[property] = newValue;
+        return newObject;
+    }
+    if (patch[2] == 0) {
+        // undefined, delete value
+        [newObject removeObjectForKey:property];
+        return newObject;
+    }
+    return newObject;
+}
+
+-(id)patchObject:(NSDictionary*)object forProperty:(NSString*)property patch:(NSObject*)patch error:(NSError**)error {
+    NSMutableDictionary* newObject = [object mutableCopy];
+   
+    if ([patch isKindOfClass:[NSArray class]]) {
+        // leaf: changed value
+        return [self applyPatch:(NSArray*)patch forProperty:property toObject:object];
+    }
+    if ([patch isKindOfClass:[NSDictionary class]]) {
+        
+        NSDictionary* patchDict = (NSDictionary*)patch;
+        NSDictionary *target;
+        
+        if ([target[@"_t"] isEqualToString:@""]){
+        // array diff
+
+        } else {
+            target = (property == nil) ? object : object[property];
+            for (NSString* newProperty in patchDict) {
+                newObject = [self patchObject:target forProperty:newProperty patch:patchDict[newProperty] error:error];
+            }
+        }
+    } else {
+        if (error) {
+            *error = [NSError errorWithDomain:AGDiffPatchErrorDomain
+                                         code:0
+                                     userInfo:[NSDictionary dictionaryWithObjectsAndKeys:@"Error while patching object",
+                                               NSLocalizedDescriptionKey, nil]];
+        }
+        return nil;
+    }
+    return newObject;
 }
 
 @end
