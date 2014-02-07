@@ -165,6 +165,25 @@ describe(@"AGDiffPatch", ^{
             //[diff shouldNotBeNil];
             //[[diff should] equal:@{@"_t":@"a", @"1":@[@"edith", @"edith-marie"]}];
         });
+        
+        // TODO
+        it(@" 2 arrays when several elements _not following_ were deleted", ^{
+//            NSMutableDictionary* contact1 = [@{@"id": @"1",
+//                                               @"name":@"Corinne",
+//                                               @"birthdate":@"12021972",
+//                                               @"friends": [@[@{@"name": @"thierry"},
+//                                                              @{@"name": @"eric"},
+//                                                              @{@"name": @"ludo"},
+//                                                              @{@"name": @"ludovv"}] mutableCopy]
+//                                               } mutableCopy];
+//            NSMutableDictionary* contact2 = [@{@"id": @"1",
+//                                               @"name":@"Corinne",
+//                                               @"birthdate":@"12021972",
+//                                               @"friends": [@[@{@"name": @"thierry"},
+//                                                              @{@"name": @"ludo"}] mutableCopy]
+//                                               } mutableCopy];
+//            NSDictionary* patch = [diffPatch diffFrom:contact1 to:contact2];
+        });
    });
     
     context(@"when patching", ^{
@@ -237,25 +256,26 @@ describe(@"AGDiffPatch", ^{
                                        }];
         });
         
-//        it(@"an array with patch containing addition", ^{
-//            NSMutableDictionary* contact1 = [@{@"id": @"1",
-//                                               @"name":@"Corinne",
-//                                               @"birthdate":@"12021972",
-//                                               @"friends": @[@{@"name": @"thierry"},
-//                                                             @{@"name": @"ludo"}]
-//                                               } mutableCopy];
-//            NSMutableDictionary* contact2 = [@{@"id": @"1",
-//                                               @"name":@"Corinne",
-//                                               @"birthdate":@"12021972",
-//                                               @"friends": @[@{@"name": @"thierry"},
-//                                                             @{@"name": @"eric"},
-//                                                             @{@"name": @"ludo"}]
-//                                               } mutableCopy];
-//            NSDictionary* patch = [diffPatch diffFrom:contact1 to:contact2];
-//            [diffPatch patchObject:contact1 withPatch:patch error:nil];
-//            
-//            [[contact1 should] equal:contact2];
-//        });
+        it(@"an array with patch containing deletion", ^{
+            NSMutableDictionary* contact1 = [@{@"id": @"1",
+                                               @"name":@"Corinne",
+                                               @"birthdate":@"12021972",
+                                               @"friends": [@[@{@"name": @"thierry"},
+                                                              @{@"name": @"ludo"},
+                                                              @{@"name": @"eric"},
+                                                              @{@"name": @"ludovv"}] mutableCopy]
+                                               } mutableCopy];
+            NSMutableDictionary* contact2 = [@{@"id": @"1",
+                                               @"name":@"Corinne",
+                                               @"birthdate":@"12021972",
+                                               @"friends": [@[@{@"name": @"thierry"},
+                                                              @{@"name": @"ludo"}] mutableCopy]
+                                               } mutableCopy];
+            NSDictionary* patch = [diffPatch diffFrom:contact1 to:contact2];
+            [diffPatch patchObject:contact1 withPatch:patch error:nil];
+            
+            [[contact1 should] equal:contact2];
+        });
     });
     
 });

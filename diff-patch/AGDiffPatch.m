@@ -38,6 +38,28 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
     return self;
 }
 
+-(id)diffFrom:(id<NSFastEnumeration, NSObject>)fromObject to:(id<NSFastEnumeration, NSObject>)toObject {
+    if(fromObject == toObject) {
+        return [NSNull null];
+    }
+    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSDictionary class]]) {
+        return [self diffDictionaryFrom:(NSDictionary*)fromObject to:(NSDictionary*)toObject];
+    }
+    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSArray class]]) {
+        return [self diffArrayFrom:(NSArray*)fromObject to:(NSArray*)toObject];
+    }
+    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSString class]]) {
+        return [self diffStringFrom:(NSString*)fromObject to:(NSString*)toObject];
+    }
+    return [NSNull null];
+}
+
+-(void)patchObject:(NSMutableDictionary*)object withPatch:(NSObject*)patch error:(NSError**)error {
+    [self patchObject:object forProperty:nil patch:patch error:error];
+}
+
+#pragma Private methods
+
 -(BOOL)areTheSameFromObject:(NSArray*)fromObject toArray:(NSArray*)toObject fromIndex:(NSUInteger)fromIndex toIndex:(NSUInteger)toIndex {
     if(fromObject == toObject) {
         return YES;
@@ -151,26 +173,6 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
     return NO;
 }
 
--(id)diffFrom:(id<NSFastEnumeration, NSObject>)fromObject to:(id<NSFastEnumeration, NSObject>)toObject {
-    if(fromObject == toObject) {
-        return [NSNull null];
-    }
-    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSDictionary class]]) {
-        return [self diffDictionaryFrom:(NSDictionary*)fromObject to:(NSDictionary*)toObject];
-    }
-    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSArray class]]) {
-        return [self diffArrayFrom:(NSArray*)fromObject to:(NSArray*)toObject];
-    }
-    if ([self isFrom:fromObject andTo:toObject nullOrOfType:[NSString class]]) {
-        return [self diffStringFrom:(NSString*)fromObject to:(NSString*)toObject];
-    }
-    return [NSNull null];
-}
-
--(void)patchObject:(NSMutableDictionary*)object withPatch:(NSObject*)patch error:(NSError**)error {
-    [self patchObject:object forProperty:nil patch:patch error:error];
-}
-
 -(void)applyPatch:(NSArray*)patch forProperty:(NSString*)property toObject:(NSMutableDictionary*)object {
     if ([patch count] < 3) {
         NSString* newValue = patch[[patch count] - 1];
@@ -178,6 +180,38 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
     } else if ([patch[2]  isEqual: @0]) {
         [object removeObjectForKey:property];
     }
+}
+
+-(void)applyPatch:(NSDictionary*)patch toArray:(NSMutableArray*)array {
+    NSMutableArray* toRemove = [NSMutableArray array];
+    NSMutableArray* toAdd = [NSMutableArray array];
+    NSMutableArray* toModify = [NSMutableArray array];
+
+    for(NSString* prop in patch) {
+       if (![prop isEqualToString:@"_t"]) {
+           if([prop hasPrefix:@"_"]) {
+               [toRemove addObject:@{@"index":[prop substringFromIndex:1], @"patch":patch[prop]}];
+           } else if ([prop length] == 1) {
+                NSUInteger index = [[prop substringFromIndex:0] integerValue];
+                [toAdd insertObject:patch[prop] atIndex:index];
+           } else {
+               NSUInteger index = [[prop substringFromIndex:0] integerValue];
+               [toModify insertObject:patch[prop] atIndex:index];
+           }
+       }
+    }
+    [toRemove sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        // Descending sort
+        if ([obj1[@"index"] integerValue] < [obj2[@"index"] integerValue])
+            return (NSComparisonResult)NSOrderedDescending;
+        if ([obj1[@"index"] integerValue] > [obj2[@"index"] integerValue])
+            return (NSComparisonResult)NSOrderedAscending;
+        return (NSComparisonResult)NSOrderedSame;
+    }];
+    for (NSDictionary* elt in toRemove) {
+        [array removeObject:elt[@"patch"][0]];
+    }
+
 }
 
 -(void)patchObject:(NSMutableDictionary*)object forProperty:(NSString*)property patch:(NSObject*)patch error:(NSError**)error {
@@ -190,12 +224,10 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
         
         NSDictionary* patchDict = (NSDictionary*)patch;
         NSMutableDictionary *target;
-        
-        if ([target[@"_t"] isEqualToString:@""]){
-        // array diff
-
+        target = (property == nil) ? object : object[property];
+        if ([patchDict[@"_t"] isEqualToString:@"a"]){
+            [self applyPatch:patchDict toArray:(NSMutableArray*)target];
         } else {
-            target = (property == nil) ? object : object[property];
             for (NSString* newProperty in patchDict) {
                 [self patchObject:target forProperty:newProperty patch:patchDict[newProperty] error:error];
             }
