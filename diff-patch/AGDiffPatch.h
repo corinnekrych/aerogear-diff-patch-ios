@@ -19,5 +19,5 @@
 
 @interface AGDiffPatch : NSObject
 -(id)diffFrom:(NSObject *)fromObject to:(NSObject *)toObject;
--(id)patchObject:(NSDictionary*)object withPatch:(NSObject*)patch error:(NSError**)error;
+-(void)patchObject:(NSDictionary*)object withPatch:(NSObject*)patch error:(NSError**)error;
 @end

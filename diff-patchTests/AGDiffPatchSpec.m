@@ -185,12 +185,34 @@ describe(@"AGDiffPatch", ^{
         
         it(@"map of string for different objects should return array of differences", ^{
             patch = [@{@"name":@[@"corinne", @"Corinne"]} mutableCopy];
-            NSDictionary* patchedObject = [diffPatch patchObject:contact1 withPatch:patch error:nil];
+            [diffPatch patchObject:contact1 withPatch:patch error:nil];
 
-            [[patchedObject should] equal:@{@"id": @"1",
+            [[contact1 should] equal:@{@"id": @"1",
                                        @"name":@"Corinne",
                                        @"birthdate":@"12021972",
                                        @"isFriendly": @"true"
+                                       }];
+        });
+        
+        it(@"map of string for different objects should return array of differences", ^{
+            NSMutableDictionary* contact2 = [@{@"id": @"1",
+                          @"name":@"seb",
+                          @"birthdate":@"26061976",
+                          @"friend": contact1
+                          } mutableCopy];
+            patch = [@{@"friend":@{@"name": @[@"corinne", @"Corinne"]}} mutableCopy];
+            
+            [diffPatch patchObject:contact2 withPatch:patch error:nil];
+            
+            [[contact2 should] equal:@{@"birthdate": @"26061976",
+                                       @"friend": @{
+                                               @"birthdate": @"12021972",
+                                               @"id": @"1",
+                                               @"isFriendly": @"true",
+                                               @"name": @"Corinne",
+                                               },
+                                        @"id": @"1",
+                                        @"name": @"seb",
                                        }];
         });
     });
