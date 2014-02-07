@@ -175,8 +175,7 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
     if ([patch count] < 3) {
         NSString* newValue = patch[[patch count] - 1];
         object[property] = newValue;
-    } else if (patch[2] == 0) {
-        // undefined, delete value
+    } else if ([patch[2]  isEqual: @0]) {
         [object removeObjectForKey:property];
     }
 }

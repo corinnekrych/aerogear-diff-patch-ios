@@ -183,7 +183,7 @@ describe(@"AGDiffPatch", ^{
 
         });
         
-        it(@"map of string for different objects should return array of differences", ^{
+        it(@"an object with updates", ^{
             patch = [@{@"name":@[@"corinne", @"Corinne"]} mutableCopy];
             [diffPatch patchObject:contact1 withPatch:patch error:nil];
 
@@ -194,7 +194,7 @@ describe(@"AGDiffPatch", ^{
                                        }];
         });
         
-        it(@"map of string for different objects should return array of differences", ^{
+        it(@"an object with embedded updates", ^{
             NSMutableDictionary* contact2 = [@{@"id": @"1",
                           @"name":@"seb",
                           @"birthdate":@"26061976",
@@ -215,6 +215,47 @@ describe(@"AGDiffPatch", ^{
                                         @"name": @"seb",
                                        }];
         });
+
+        it(@"an object with embedded deletion", ^{
+            NSMutableDictionary* contact2 = [@{@"id": @"1",
+                                               @"name":@"seb",
+                                               @"birthdate":@"26061976",
+                                               @"friend": contact1
+                                               } mutableCopy];
+            patch = [@{@"friend":@{@"name": @[@"corinne",@0, @0]}} mutableCopy];
+            
+            [diffPatch patchObject:contact2 withPatch:patch error:nil];
+            
+            [[contact2 should] equal:@{@"birthdate": @"26061976",
+                                       @"friend": @{
+                                               @"birthdate": @"12021972",
+                                               @"id": @"1",
+                                               @"isFriendly": @"true",
+                                               },
+                                       @"id": @"1",
+                                       @"name": @"seb",
+                                       }];
+        });
+        
+//        it(@"an array with patch containing addition", ^{
+//            NSMutableDictionary* contact1 = [@{@"id": @"1",
+//                                               @"name":@"Corinne",
+//                                               @"birthdate":@"12021972",
+//                                               @"friends": @[@{@"name": @"thierry"},
+//                                                             @{@"name": @"ludo"}]
+//                                               } mutableCopy];
+//            NSMutableDictionary* contact2 = [@{@"id": @"1",
+//                                               @"name":@"Corinne",
+//                                               @"birthdate":@"12021972",
+//                                               @"friends": @[@{@"name": @"thierry"},
+//                                                             @{@"name": @"eric"},
+//                                                             @{@"name": @"ludo"}]
+//                                               } mutableCopy];
+//            NSDictionary* patch = [diffPatch diffFrom:contact1 to:contact2];
+//            [diffPatch patchObject:contact1 withPatch:patch error:nil];
+//            
+//            [[contact1 should] equal:contact2];
+//        });
     });
     
 });
