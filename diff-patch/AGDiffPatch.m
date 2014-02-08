@@ -85,6 +85,63 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
     
 }
 
+-(id)longestCommonSequenceWithObject1:(NSArray*)object1 andObject2:(NSArray*)object2 {
+    NSArray* matrix = [self lengthMatrixForArray1:object1 andArray2:object2];
+    NSDictionary* result = [self backtrackMatrix:matrix array1:object1 array2:object2 index1:[object1 count] index2:[object2 count]];
+    NSLog(@"REsult::%@", [result description]);
+    return result;
+}
+
+-(NSArray*)lengthMatrixForArray1:(NSArray*)array1 andArray2:(NSArray*)array2 {
+    NSMutableArray* matrix;
+    int len1 = [array1 count];
+    int len2 = [array2 count];
+    matrix = [[NSMutableArray alloc] initWithCapacity:len1 + 1];
+    for (int i = 0; i < len1 + 1; i++) {
+        matrix[i] = [[NSMutableArray alloc] initWithCapacity:len2 + 1];
+        for (int j = 0; j < len2 + 1; j++) {
+            matrix[i][j] = @0;
+        }
+    }
+    for (int x = 1; x < len1 + 1; x++) {
+        for (int y = 1; y < len2 + 1; y++) {
+            if ([self areTheSameFromObject:array1 toArray:array2 fromIndex:x-1 toIndex:y-1]) {
+                NSUInteger value = [matrix[x - 1][y - 1] integerValue] + 1;
+                matrix[x][y] = [[NSNumber alloc] initWithInteger:value];
+            } else {
+                matrix[x][y] = [matrix[x - 1][y] integerValue] < [matrix[x][y - 1] integerValue] ?
+                                [[NSNumber alloc] initWithInteger:[matrix[x][y - 1] integerValue]] :
+                                [[NSNumber alloc] initWithInteger:[matrix[x - 1][y] integerValue]];
+            }
+        }
+    }
+    return matrix;
+}
+
+-(id)backtrackMatrix:(NSArray*)matrix array1:(NSArray*)array1 array2:(NSArray*)array2 index1:(NSUInteger)index1 index2:(NSUInteger)index2 {
+    if (index1 == 0 || index2 == 0) {
+        return @{
+        @"sequence": [@[] mutableCopy],
+        @"indices1": [@[] mutableCopy],
+        @"indices2": [@[] mutableCopy]
+        };
+    }
+    
+    if ([self areTheSameFromObject:array1 toArray:array2 fromIndex:(index1 - 1) toIndex:(index2 - 1)]) {
+        NSDictionary* subsequence = [self backtrackMatrix:matrix array1:array1 array2:array2 index1:index1 - 1 index2:index2 -1];
+        [subsequence[@"sequence"] addObject:array1[index1 - 1]];
+        [subsequence[@"indices1"] addObject:[[NSNumber alloc] initWithInteger:index1 - 1]];
+        [subsequence[@"indices2"] addObject:[[NSNumber alloc] initWithInteger:index2 - 1]];
+        return subsequence;
+    }
+    
+    if (matrix[index1][index2 - 1] > matrix[index1 - 1][index2]) {
+        return [self backtrackMatrix:matrix array1:array1 array2:array2 index1:index1 index2:index2 - 1];
+    } else {
+        return [self backtrackMatrix:matrix array1:array1 array2:array2 index1:index1 - 1 index2:index2];
+    }
+}
+
 -(id)diffArrayFrom:(NSArray *)fromObject to:(NSArray *)toObject {
     NSUInteger commonHead = 0;
     NSUInteger commonTail = 0;
@@ -127,6 +184,12 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
         }
         return diff;
     }
+    int len1 = abs((int)fromLength - (int)commonTail) -(int)commonHead;
+    int len2 = abs((int)toLength - (int)commonTail) -(int)commonHead;
+    NSArray* array1 = [fromObject subarrayWithRange:(NSRange){commonHead, len1}];
+    NSArray* array2 = [toObject subarrayWithRange:(NSRange){commonHead, len2}];
+    NSDictionary* lcs = [self longestCommonSequenceWithObject1:array1 andObject2:array2];
+    NSLog(@"After computing lcs:: %@", [lcs description]);
     return diff;
 }
 
