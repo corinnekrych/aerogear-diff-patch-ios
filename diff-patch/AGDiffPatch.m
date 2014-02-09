@@ -183,12 +183,68 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
         }
         return diff;
     }
+    
     int len1 = abs((int)fromLength - (int)commonTail) -(int)commonHead;
     int len2 = abs((int)toLength - (int)commonTail) -(int)commonHead;
     NSArray* array1 = [fromObject subarrayWithRange:(NSRange){commonHead, len1}];
     NSArray* array2 = [toObject subarrayWithRange:(NSRange){commonHead, len2}];
     NSDictionary* lcs = [self longestCommonSequenceWithObject1:array1 andObject2:array2];
     NSLog(@"After computing lcs:: %@", [lcs description]);
+    
+    if(!diff) {
+        diff = [@{@"_t":@"a"} mutableCopy];
+    }
+    
+    NSMutableArray* removedItems = [[NSMutableArray array] mutableCopy];
+    for (int index = commonHead; index < [fromObject count] - commonTail; index++) {
+        NSUInteger indexOnArray1 = [lcs[@"indices1"] indexOfObject:[[NSNumber alloc] initWithInteger:index - commonHead]];
+        if (indexOnArray1 == NSNotFound) {
+            // removed
+            NSString* key = [NSString stringWithFormat:@"_%d", index];
+            diff[key] = @[fromObject[index], @0, @0];
+            [removedItems addObject:[[NSNumber alloc] initWithInteger:index]];
+        }
+    }
+    
+    NSUInteger removedItemsLength = [removedItems count];
+    
+    for (int index = commonHead; index < [toObject count] - commonTail; index++) {
+        NSUInteger indexOnArray2 = [lcs[@"indices2"] indexOfObject:[[NSNumber alloc] initWithInteger:index - commonHead]];
+        if (indexOnArray2 == NSNotFound) {
+            // added, try to match with a removed item and register as position move
+            BOOL isMove = NO;
+            // TODO make it configurable
+            //if (jdp.config.detectArrayMove) {
+                if (removedItemsLength > 0) {
+                    for (int index1 = 0; index1 < removedItemsLength; index1++) {
+                        if ( [self areTheSameFromObject:array1 toArray:array2 fromIndex:[removedItems[index1] integerValue] toIndex:index]) {
+                            // store position move as: [originalValue, newPosition, 3]
+                            NSString* key = [NSString stringWithFormat:@"_%@", removedItems[index1]];
+                            diff[key] = @[diff[key], [[NSNumber alloc] initWithInteger:index], @3];
+//                            if (!jdp.config.includeValueOnArrayMove) {
+//                                // don't include moved value on diff, to save bytes
+//                                diff['_' + removedItems[index1]][0] = '';
+//                            }
+//                            // array of array
+//                            tryObjectInnerDiff(removedItems[index1], index);
+//                            removedItems.splice(index1, 1);
+                            isMove = YES;
+                            break;
+                        }
+                    }
+                }
+            //}
+            if (!isMove) {
+                // added
+                NSString* key = [NSString stringWithFormat:@"%d", index];
+                diff[key] = @[toObject[index]];
+            }
+        } else {
+            // match, do inner diff to deal with array of array
+            //tryObjectInnerDiff(lcs.indices1[indexOnArray2] + commonHead, lcs.indices2[indexOnArray2] + commonHead);
+        }
+    }
+    
     return diff;
 }
 
