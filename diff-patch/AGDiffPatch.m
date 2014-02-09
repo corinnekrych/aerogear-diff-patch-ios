@@ -88,7 +88,6 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
 -(id)longestCommonSequenceWithObject1:(NSArray*)object1 andObject2:(NSArray*)object2 {
     NSArray* matrix = [self lengthMatrixForArray1:object1 andArray2:object2];
     NSDictionary* result = [self backtrackMatrix:matrix array1:object1 array2:object2 index1:[object1 count] index2:[object2 count]];
-    NSLog(@"REsult::%@", [result description]);
     return result;
 }
 
@@ -135,7 +134,7 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
         return subsequence;
     }
     
-    if (matrix[index1][index2 - 1] > matrix[index1 - 1][index2]) {
+    if ([matrix[index1][index2 - 1] integerValue] > [matrix[index1 - 1][index2] integerValue]) {
         return [self backtrackMatrix:matrix array1:array1 array2:array2 index1:index1 index2:index2 - 1];
     } else {
         return [self backtrackMatrix:matrix array1:array1 array2:array2 index1:index1 - 1 index2:index2];
