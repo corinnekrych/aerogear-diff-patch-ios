@@ -217,10 +217,10 @@ NSString * const AGDiffPatchErrorDomain = @"AGDiffPatchErrorDomain";
             //if (jdp.config.detectArrayMove) {
                 if (removedItemsLength > 0) {
                     for (int index1 = 0; index1 < removedItemsLength; index1++) {
-                        if ( [self areTheSameFromObject:array1 toArray:array2 fromIndex:[removedItems[index1] integerValue] toIndex:index]) {
+                        if ( [self areTheSameFromObject:fromObject toArray:toObject fromIndex:[removedItems[index1] integerValue] toIndex:index]) {
                             // store position move as: [originalValue, newPosition, 3]
                             NSString* key = [NSString stringWithFormat:@"_%@", removedItems[index1]];
-                            diff[key] = @[diff[key], [[NSNumber alloc] initWithInteger:index], @3];
+                            diff[key] = @[@"", [[NSNumber alloc] initWithInteger:index], @3];
 //                            if (!jdp.config.includeValueOnArrayMove) {
 //                                // don't include moved value on diff, to save bytes
 //                                diff['_' + removedItems[index1]][0] = '';

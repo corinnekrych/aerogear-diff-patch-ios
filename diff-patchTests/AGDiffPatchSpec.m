@@ -139,14 +139,12 @@ describe(@"AGDiffPatch", ^{
             [[diff should] equal:@{@"_t":@"a", @"1":@[@"edith"]}];
         });
         
-        // TODO implement LCS algo
-        // http://en.wikipedia.org/wiki/Longest_common_subsequence_problem
         it(@"one element of an array was added and one element was changed should return differences", ^{
-//            NSArray *contactOne = @[@"corinne"];
-//            NSArray *contactTwo = @[@"corIinne", @"edith"];
-//            NSDictionary *diff = [diffPatch diffFrom:contactOne to:contactTwo];
-//            [diff shouldNotBeNil];
-//            [[diff should] equal:@{@"_t":@"a", @"1":@[@"edith"]}];
+            NSArray *contactOne = @[@"corinne"];
+            NSArray *contactTwo = @[@"corIinne", @"edith"];
+            NSDictionary *diff = [diffPatch diffFrom:contactOne to:contactTwo];
+            [diff shouldNotBeNil];
+            [[diff should] equal:@{@"_t":@"a", @"1":@[@"edith"], @"_0":@[@"corinne", @0, @0], @"0":@[@"corIinne"]}];
         });
         
         it(@"no elements was changed in an array should return no difference", ^{
@@ -157,17 +155,17 @@ describe(@"AGDiffPatch", ^{
             [[diff should] equal:[NSNull null]];
         });
         
-        // TODO
-//        it(@"one element of arrays was modified should return differences", ^{
-//            NSArray *contactOne = @[@"corinne", @"edith"];
-//            NSArray *contactTwo = @[@"corinne", @"edith-marie"];
-//            NSDictionary *diff = [diffPatch diffFrom:contactOne to:contactTwo];
-//            [diff shouldNotBeNil];
-//            [[diff should] equal:@{@"_t":@"a", @"1":@[@"edith", @"edith-marie"]}];
-//        });
+
+        it(@"one element of arrays was modified should return differences", ^{
+            NSArray *contactOne = @[@"corinne", @"edith"];
+            NSArray *contactTwo = @[@"corinne", @"edith-marie"];
+            NSDictionary *diff = [diffPatch diffFrom:contactOne to:contactTwo];
+            [diff shouldNotBeNil];
+            [[diff should] equal:@{@"1":@[@"edith-marie"], @"_t":@"a", @"_1":@[@"edith", @0, @0]}];
+        });
 
         
-        it(@" 2 arrays when several elements _not following_ were added", ^{
+        it(@"2 arrays when several elements _not following_ were added", ^{
             NSMutableDictionary* contact1 = [@{@"id": @"1",
                                                @"name":@"Corinne",
                                                @"birthdate":@"12021972",
@@ -191,7 +189,7 @@ describe(@"AGDiffPatch", ^{
                                             @"_t":@"a"}}];
         });
         
-        it(@" 2 arrays when several elements _not following_ were deleted", ^{
+        it(@"2 arrays when several elements _not following_ were deleted", ^{
 
             NSMutableDictionary* contact1 = [@{@"id": @"1",
                                                @"name":@"Corinne",
@@ -215,6 +213,39 @@ describe(@"AGDiffPatch", ^{
                                             @"_4": @[@{@"name":@"margareth"}, @0, @0],
                                             @"_t":@"a"}}];
         });
+        
+        it(@"moved element within array", ^{
+            NSMutableDictionary* corinne = [@{@"name": @"corinne"} mutableCopy];
+            NSMutableDictionary* philippe = [@{@"name": @"philippe"} mutableCopy];
+            NSMutableDictionary* contact1 = [@{@"id": @"1",
+                                               @"name":@"Corinne",
+                                               @"birthdate":@"12021972",
+                                               @"friends": [@[corinne,
+                                                              philippe] mutableCopy]
+                                               } mutableCopy];
+            NSMutableDictionary* contact2 = [@{@"id": @"1",
+                                               @"name":@"Corinne",
+                                               @"birthdate":@"12021972",
+                                               @"friends": [@[philippe, corinne] mutableCopy]
+                                               } mutableCopy];
+            NSDictionary* patch = [diffPatch diffFrom:contact1 to:contact2];
+            [[patch should] equal:@{@"friends":@{
+                                            @"_1": @[@"", @0, @3],
+                                            @"_t":@"a"}}];
+        });
+
+        //TODO recursive array
+//        it(@"moved element within array of array", ^{
+//            NSMutableDictionary* france = [@{@"name": @"france"} mutableCopy];
+//            NSMutableDictionary* italy = [@{@"name": @"italy"} mutableCopy];
+//            NSMutableDictionary* person_countries1 = [@{@"person_countries": @[@{@"name":@"corinne", @"countries":@[france, italy]},
+//                                                                               @{@"name":@"philippe", @"countries":@[france, italy]}]} mutableCopy];
+//            NSMutableDictionary* person_countries2 = [@{@"person_countries": @[@{@"name":@"corinne", @"countries":@[france, italy]},
+//                                                                               @{@"name":@"philippe", @"countries":@[italy]}]} mutableCopy];
+//            NSDictionary* patch = [diffPatch diffFrom:person_countries1 to:person_countries2];
+//            [[[patch should] equal:@{@"person_countries":@{@"countries":@[@{@"name":@"fance"}, @0, @0], @"_t":@"a"}, @"_t":@"a"}] ];
+//             
+//        });
         
    });
     
